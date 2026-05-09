@@ -1,194 +1,1263 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>向雪岑 左右对比海报（裁切一致版）</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
-
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#1A3B99',
-                        secondary: '#4A6FD1',
-                        darkBlue: '#0A1A4A',
-                    },
-                }
-            }
-        }
-    </script>
-    <style type="text/tailwindcss">
-        @layer utilities {
-            .poster-wrap {
-                width: 1080px;
-                height: 1660px;
-                background: #fff;
-                overflow: hidden;
-            }
-            .tag-gradient {
-                background: linear-gradient(90deg, #1A3B99 0%, #0A1A4A 100%);
-            }
-            .edit-text {
-                @apply outline-none cursor-text hover:bg-primary/10 px-1 rounded;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>向雪岑品牌案例对比海报生成器</title>
+  <style>
+    :root{
+      --brand:#1A3B99;
+      --light:#4A6FD1;
+      --navy:#0A1A4A;
+      --divider:#E0E0E0;
+      --line:rgba(74,111,209,.60);
+      --bg:#ffffff;
+      --ui:#f4f7ff;
+      --shadow:0 20px 60px rgba(14,31,84,.12);
+    }
+    *{box-sizing:border-box}
+    html,body{
+      margin:0;
+      min-height:100%;
+      background:
+        radial-gradient(circle at top left,rgba(74,111,209,.08),transparent 20%),
+        radial-gradient(circle at bottom right,rgba(26,59,153,.08),transparent 25%),
+        #f6f8fc;
+      color:#10204a;
+      font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",Arial,sans-serif;
+    }
+    button,input{font:inherit}
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-rows:auto 1fr;
+    }
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:16px;
+      padding:18px 22px 10px;
+      flex-wrap:wrap;
+    }
+    .group{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .badge{
+      border-radius:999px;
+      padding:8px 13px;
+      background:rgba(255,255,255,.9);
+      border:1px solid rgba(26,59,153,.12);
+      box-shadow:0 6px 18px rgba(15,29,68,.06);
+      color:var(--brand);
+      font-size:13px;
+      font-weight:700;
+    }
+    .btn{
+      border:0;
+      cursor:pointer;
+      border-radius:12px;
+      padding:12px 16px;
+      color:#fff;
+      font-weight:700;
+      background:linear-gradient(135deg,var(--brand),var(--navy));
+      box-shadow:0 10px 26px rgba(26,59,153,.22);
+    }
+    .btn.secondary{
+      color:var(--brand);
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(26,59,153,.14);
+      box-shadow:0 8px 20px rgba(15,29,68,.08);
+    }
+    .workspace{
+      display:grid;
+      justify-items:center;
+      padding:0 22px 28px;
+    }
+    .hint{
+      margin:0 0 14px;
+      color:rgba(16,32,74,.68);
+      font-size:13px;
+      text-align:center;
+      line-height:1.6;
+    }
+    .poster-wrap{
+      width:min(1080px,calc(100vw - 44px));
+      aspect-ratio:1080/1660;
+      background:#fff;
+      border-radius:18px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      position:relative;
+    }
+    .poster{
+      position:absolute;
+      left:0;
+      top:0;
+      width:1080px;
+      height:1660px;
+      background:#fff;
+      transform-origin:0 0;
+      user-select:none;
+    }
+    .editable{
+      outline:none;
+      cursor:text;
+      white-space:pre-line;
+      user-select:text;
+      -webkit-user-select:text;
+    }
+    .brand-bar{
+      position:absolute;
+      left:48px;
+      right:48px;
+      top:62px;
+      height:72px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      color:var(--brand);
+    }
+    .brand-left{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      line-height:1;
+    }
+    .brand-name{
+      font-size:29px;
+      font-weight:500;
+      letter-spacing:.5px;
+      white-space:nowrap;
+      min-width:122px;
+    }
+    .brand-divider{
+      width:1px;
+      height:36px;
+      margin-top:2px;
+      background:var(--brand);
+      opacity:.85;
+    }
+    .brand-tagline{
+      padding-top:3px;
+      font-size:15px;
+      font-weight:600;
+      line-height:1.08;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .brand-right{
+      color:var(--light);
+      width:260px;
+      text-align:right;
+      font-size:15px;
+      line-height:1.1;
+      letter-spacing:1.1px;
+      padding-top:1px;
+      white-space:pre-line;
+    }
+    .top-rule{
+      position:absolute;
+      left:48px;
+      right:48px;
+      top:145px;
+      height:1px;
+      background:var(--line);
+    }
+    .title{
+      position:absolute;
+      left:0;
+      top:260px;
+      width:100%;
+      text-align:center;
+      color:var(--brand);
+      font-size:118px;
+      font-weight:900;
+      line-height:1;
+      letter-spacing:.5px;
+      white-space:nowrap;
+      transform-origin:center center;
+    }
+    .compare-frame{
+      position:absolute;
+      left:0;
+      top:500px;
+      width:1080px;
+      height:830px;
+      background:#fff;
+      border-top:1px solid var(--divider);
+      border-bottom:1px solid var(--divider);
+      overflow:hidden;
+    }
+    .compare-divider{
+      position:absolute;
+      left:50%;
+      top:0;
+      width:1px;
+      height:100%;
+      background:var(--divider);
+      transform:translateX(-.5px);
+      pointer-events:none;
+    }
+    .dropzone{
+      position:absolute;
+      top:0;
+      bottom:0;
+      width:50%;
+      background:#fff;
+      cursor:pointer;
+      overflow:hidden;
+    }
+    .dropzone.left{left:0}
+    .dropzone.right{right:0}
+    .dropzone.left::before,.dropzone.right::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+    .dropzone.left::before{box-shadow:inset -1px 0 0 var(--divider)}
+    .dropzone.right::before{box-shadow:inset 1px 0 0 var(--divider)}
+    .photo{
+      position:absolute;
+      left:0;
+      top:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:none;
+      pointer-events:none;
+      background:#fff;
+    }
+    .dropzone.has-image .photo{display:block}
+    .placeholder{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(26,59,153,.16);
+      font-size:28px;
+      font-weight:700;
+      letter-spacing:2px;
+      text-align:center;
+      padding:24px;
+      line-height:1.2;
+      background:#fff;
+    }
+    .dropzone.has-image .placeholder{display:none}
+    .label-row{
+      position:absolute;
+      left:56px;
+      right:56px;
+      top:1379px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .label{
+      width:366px;
+      height:68px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+      font-size:36px;
+      font-weight:800;
+      letter-spacing:2px;
+      background:linear-gradient(to right,var(--brand),var(--navy));
+      transform-origin:center center;
+    }
+    .footer-copy{
+      position:absolute;
+      left:0;
+      top:1509px;
+      width:100%;
+      text-align:center;
+      color:var(--brand);
+      font-size:30px;
+      font-weight:800;
+      line-height:1;
+      letter-spacing:1px;
+    }
+    .footer-sub{
+      position:absolute;
+      left:50%;
+      top:1544px;
+      width:760px;
+      transform:translateX(-50%);
+      text-align:center;
+      color:var(--light);
+      font-size:19px;
+      font-weight:500;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .bottom-strip{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      height:60px;
+      background:linear-gradient(to right,#2749d6 0%,#09184a 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .bottom-pill{
+      color:#fff;
+      border:1px solid rgba(255,255,255,.35);
+      border-radius:10px;
+      padding:3px 14px 4px;
+      font-size:13px;
+      line-height:1;
+      letter-spacing:.8px;
+      background:rgba(255,255,255,.05);
+      min-width:110px;
+      text-align:center;
+    }
+    .overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(14,31,84,.44);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:30;
+      padding:24px;
+    }
+    .overlay.open{display:flex}
+    .crop-card{
+      width:min(96vw,980px);
+      border-radius:20px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 26px 70px rgba(0,0,0,.28);
+    }
+    .crop-head{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:14px 18px;
+      color:#fff;
+      background:linear-gradient(135deg,rgba(26,59,153,.98),rgba(10,26,74,.98));
+    }
+    .crop-head strong{font-size:16px}
+    .crop-head span{font-size:12px;opacity:.84}
+    .crop-body{
+      display:grid;
+      grid-template-columns:minmax(0,540px) 280px;
+      justify-content:center;
+      gap:16px;
+      padding:16px;
+    }
+    .crop-stage{
+      position:relative;
+      width:540px;
+      aspect-ratio:540/830;
+      border-radius:16px;
+      overflow:hidden;
+      background:#fff;
+      border:1px solid rgba(26,59,153,.12);
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.7);
+      touch-action:none;
+      cursor:grab;
+    }
+    .crop-stage:active{cursor:grabbing}
+    .crop-stage img{
+      position:absolute;
+      left:0;
+      top:0;
+      transform-origin:0 0;
+      pointer-events:none;
+      user-select:none;
+      background:#fff;
+      will-change:transform;
+    }
+    .crop-grid{
+      position:absolute;
+      inset:0;
+      background-image:linear-gradient(rgba(26,59,153,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(26,59,153,.06) 1px,transparent 1px);
+      background-size:32px 32px;
+      opacity:.35;
+      pointer-events:none;
+    }
+    .crop-overlay{
+      position:absolute;
+      inset:0;
+      border:2px solid rgba(26,59,153,.6);
+      box-shadow:inset 0 0 0 9999px rgba(255,255,255,.12);
+      pointer-events:none;
+    }
+    .crop-panel{
+      display:grid;
+      gap:14px;
+      align-content:start;
+    }
+    .tool{
+      padding:14px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid rgba(26,59,153,.10);
+      box-shadow:0 10px 24px rgba(15,29,68,.06);
+    }
+    .tool label{
+      display:block;
+      margin-bottom:8px;
+      font-size:12px;
+      color:rgba(16,32,74,.72);
+    }
+    .tool input[type=range]{width:100%}
+    .tool-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .tool-actions .btn{
+      padding:10px 14px;
+      border-radius:10px;
+      font-size:14px;
+    }
+    .tool-note{
+      font-size:12px;
+      line-height:1.7;
+      color:rgba(16,32,74,.72);
+    }
+    @media (max-width:768px){
+      .toolbar{
+        padding:12px 12px 8px;
+        gap:10px;
+      }
+      .group{
+        width:100%;
+        justify-content:center;
+      }
+      .badge{
+        font-size:12px;
+        padding:7px 11px;
+      }
+      .btn{
+        flex:1 1 0;
+        min-width:0;
+        padding:11px 12px;
+        font-size:14px;
+      }
+      .workspace{
+        padding:0 0 16px;
+      }
+      .hint{
+        padding:0 12px;
+        font-size:12px;
+      }
+      .poster-wrap{
+        width:100vw;
+        border-radius:0;
+        box-shadow:none;
+      }
+      .poster{
+        width:1080px;
+        height:1660px;
+      }
+      .label-row{
+        left:38px;
+        right:38px;
+        top:1380px;
+      }
+      .label{
+        width:calc((100vw - 76px - 48px) / 2);
+        min-width:0;
+        font-size:32px;
+      }
+      .footer-copy{
+        top:1510px;
+        font-size:28px;
+      }
+      .footer-sub{
+        top:1544px;
+        width:calc(100vw - 60px);
+        font-size:18px;
+      }
+      .brand-bar{
+        left:36px;
+        right:36px;
+        top:58px;
+      }
+      .brand-name{
+        font-size:26px;
+        min-width:108px;
+      }
+      .brand-tagline{
+        font-size:13px;
+      }
+      .brand-right{
+        width:212px;
+        font-size:13px;
+      }
+      .top-rule{
+        left:36px;
+        right:36px;
+        top:142px;
+      }
+      .title{
+        top:258px;
+        font-size:104px;
+      }
+      .compare-frame{
+        top:498px;
+      }
+      .crop-card{
+        width:100%;
+        max-width:none;
+        height:100%;
+        border-radius:0;
+      }
+      .crop-head{
+        padding:12px 14px;
+        flex-wrap:wrap;
+      }
+      .crop-body{
+        grid-template-columns:1fr;
+        padding:12px;
+        gap:12px;
+        height:calc(100vh - 60px);
+        overflow:auto;
+        align-content:start;
+      }
+      .crop-card,
+      .crop-body,
+      .crop-panel{
+        min-width:0;
+      }
+      .crop-stage{
+        width:100%;
+        max-width:540px;
+        justify-self:center;
+      }
+      .crop-stage img{
+        max-width:none;
+      }
+      .crop-panel{
+        grid-template-columns:1fr;
+      }
+      .tool-actions .btn{
+        flex:1 1 calc(50% - 5px);
+      }
+      .overlay{
+        padding:0;
+      }
+    }
+    @media (max-width:1180px){
+      .poster-wrap{width:calc(100vw - 24px)}
+      .toolbar{padding:14px 12px 10px}
+      .workspace{padding:0 12px 20px}
+      .label-row{left:40px;right:40px}
+      .label{width:340px;font-size:34px}
+      .crop-body{grid-template-columns:1fr}
+      .crop-stage{width:min(100%,540px);justify-self:center}
+    }
+    @media (max-width:480px){
+      .brand-bar{
+        top:54px;
+        height:auto;
+        gap:8px;
+      }
+      .brand-left{
+        gap:8px;
+      }
+      .brand-name{
+        font-size:22px;
+        min-width:92px;
+      }
+      .brand-divider{
+        height:30px;
+      }
+      .brand-tagline{
+        font-size:12px;
+      }
+      .brand-right{
+        width:168px;
+        font-size:11px;
+        line-height:1.08;
+        letter-spacing:.7px;
+      }
+      .top-rule{
+        top:138px;
+      }
+      .title{
+        top:268px;
+        font-size:86px;
+      }
+      .compare-frame{
+        top:500px;
+      }
+      .label-row{
+        left:20px;
+        right:20px;
+        top:1382px;
+      }
+      .label{
+        width:calc((100vw - 40px - 34px) / 2);
+        height:56px;
+        font-size:22px;
+        letter-spacing:1px;
+      }
+      .footer-copy{
+        top:1508px;
+        font-size:22px;
+      }
+      .footer-sub{
+        top:1538px;
+        width:calc(100vw - 36px);
+        font-size:13px;
+      }
+      .bottom-strip{
+        height:52px;
+      }
+      .bottom-pill{
+        font-size:12px;
+        min-width:96px;
+      }
+      .toolbar{
+        gap:8px;
+      }
+      .group{
+        gap:8px;
+      }
+      .crop-head strong{
+        font-size:15px;
+      }
+      .crop-head span{
+        width:100%;
+      }
+      .tool{
+        padding:12px;
+      }
+      .tool-actions{
+        gap:8px;
+      }
+      .tool-actions .btn{
+        flex:1 1 100%;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center py-5">
+<body>
+  <div class="app">
+    <div class="toolbar">
+      <div class="group">
+        <div class="badge" id="appBadge"></div>
+        <div class="badge" id="sizeBadge"></div>
+        <div class="badge" id="modeBadge"></div>
+      </div>
+      <div class="group">
+        <button class="btn secondary" id="resetBtn"></button>
+        <button class="btn" id="downloadBtn"></button>
+      </div>
+    </div>
 
-<div class="text-center mb-3">
-    <h2 class="text-xl font-bold text-gray-800">向雪岑案例海报生成器</h2>
-    <p class="text-sm text-gray-500">✅ 裁切所见即所得 ✅ 文字可编辑 ✅ 固定1080×1660</p>
-</div>
-
-<!-- 海报 -->
-<div id="poster" class="poster-wrap flex flex-col">
-    <!-- 顶部 -->
-    <div class="px-10 pt-8">
-        <div class="flex justify-between items-start">
-            <div>
-                <p class="text-3xl font-bold text-primary">向雪岑<sup>®</sup></p>
-                <div class="border-l-2 border-primary pl-3 mt-1">
-                    <p class="text-sm text-primary">还原肌肤</p>
-                    <p class="text-sm text-primary">健康美</p>
-                </div>
+    <div class="workspace">
+      <p class="hint" id="hintText"></p>
+      <div class="poster-wrap" id="posterWrap">
+        <div class="poster" id="poster">
+          <div class="brand-bar">
+            <div class="brand-left">
+              <div class="brand-name editable" id="brandName" contenteditable="true" spellcheck="false"></div>
+              <div class="brand-divider"></div>
+              <div class="brand-tagline editable" id="brandTagline" contenteditable="true" spellcheck="false"></div>
             </div>
-            <div class="text-right pt-1">
-                <p class="text-xs text-secondary tracking-widest">REVIVE HEALTH</p>
-                <p class="text-xs text-secondary tracking-widest">AND BEAUTY OF THE SKIN</p>
+            <div class="brand-right editable" id="brandRight" contenteditable="true" spellcheck="false"></div>
+          </div>
+
+          <div class="top-rule"></div>
+          <div class="title editable" id="titleText" contenteditable="true" spellcheck="false"></div>
+
+          <div class="compare-frame">
+            <div class="compare-divider"></div>
+            <div class="dropzone left" id="leftZone" aria-label="护理前图片区"></div>
+            <div class="dropzone right" id="rightZone" aria-label="护理后图片区"></div>
+          </div>
+
+          <div class="label-row">
+            <div class="label editable" id="leftLabel" contenteditable="true" spellcheck="false"></div>
+            <div class="label editable" id="rightLabel" contenteditable="true" spellcheck="false"></div>
+          </div>
+
+          <div class="footer-copy editable" id="footerCopy" contenteditable="true" spellcheck="false"></div>
+          <div class="footer-sub editable" id="footerSub" contenteditable="true" spellcheck="false"></div>
+          <div class="bottom-strip">
+            <div class="bottom-pill editable" id="bottomPill" contenteditable="true" spellcheck="false"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" hidden>
+
+  <div class="overlay" id="cropOverlay" aria-hidden="true">
+    <div class="crop-card">
+      <div class="crop-head">
+        <strong id="cropTitle"></strong>
+        <span id="cropSubtitle"></span>
+      </div>
+      <div class="crop-body">
+        <div class="crop-stage" id="cropStage">
+          <img id="cropImage" alt="">
+          <div class="crop-grid"></div>
+          <div class="crop-overlay"></div>
+        </div>
+        <div class="crop-panel">
+          <div class="tool">
+            <label id="zoomLabel" for="zoomRange"></label>
+            <input type="range" id="zoomRange" min="1" max="4" step="0.01" value="1">
+          </div>
+          <div class="tool">
+            <label id="opsLabel"></label>
+            <div class="tool-actions">
+              <button class="btn secondary" id="cropFit"></button>
+              <button class="btn secondary" id="cropCenter"></button>
+              <button class="btn secondary" id="cropReset"></button>
+              <button class="btn secondary" id="cropCancel"></button>
+              <button class="btn" id="cropConfirm"></button>
             </div>
+          </div>
+          <div class="tool tool-note" id="cropHelp"></div>
         </div>
-        <div class="w-full h-px bg-secondary/40 mt-5"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- 标题 -->
-    <div class="text-center mt-10">
-        <h1 contenteditable="true" class="edit-text text-6xl font-bold text-primary">双C操作案例</h1>
-    </div>
+  <canvas id="exportCanvas" width="1080" height="1660" hidden></canvas>
 
-    <!-- 左右对比图 -->
-    <div class="flex-1 flex mt-10">
-        <div class="w-1/2 border-r border-gray-200 relative">
-            <input type="file" id="file1" class="hidden" accept="image/*">
-            <img id="img1" src="https://picsum.photos/540/800?1"
-                 class="w-full h-full object-cover cursor-pointer"
-                 onclick="document.getElementById('file1').click()">
-        </div>
-        <div class="w-1/2 relative">
-            <input type="file" id="file2" class="hidden" accept="image/*">
-            <img id="img2" src="https://picsum.photos/540/800?2"
-                 class="w-full h-full object-cover cursor-pointer"
-                 onclick="document.getElementById('file2').click()">
-        </div>
-    </div>
+  <script>
+    (() => {
+      const BASE = { w: 1080, h: 1660, zoneW: 540, zoneH: 830 };
+      const DEFAULTS = {
+        appBadge: '向雪岑品牌案例对比海报生成器',
+        sizeBadge: '1080 × 1660',
+        modeBadge: '纯前端 / 本地处理 / 无外链',
+        reset: '重置全部',
+        download: '下载 PNG',
+        hint: '点击文字即可编辑；点击左/右图片区上传图片并裁切。裁切窗口与海报图片区采用同一比例，确认后会直接贴入对应位置，导出为 1080 × 1660 高清 PNG。',
+        brandName: '向雪岑®',
+        brandTagline: '还原肌肤\n健康美',
+        brandRight: 'REVIVE HEALTH\nAND BEAUTY OF THE SKIN',
+        title: '双 C 操作案例',
+        leftLabel: '护理前',
+        rightLabel: '护理后',
+        footerCopy: '问题肌·学术派',
+        footerSub: '专研理论 / 专注教育 / 专精产品',
+        bottomPill: 'XIANGXUECEN',
+        cropTitle: '裁切图片',
+        cropSubtitle: '裁切比例已锁定为海报图片区比例 540 × 830',
+        zoom: '缩放',
+        ops: '操作',
+        cropFit: '适配',
+        cropCenter: '居中',
+        cropReset: '重置',
+        cropCancel: '取消',
+        cropConfirm: '确认裁切',
+        cropHelp: '适配：完整显示并尽量铺满；居中：保持当前缩放只移动到中间；重置：恢复到适配状态。确认后显示的就是最终导出的图片。'
+      };
 
-    <!-- 标签 -->
-    <div class="flex justify-around px-10 py-6">
-        <div class="tag-gradient w-[220px] py-3 text-center">
-            <span contenteditable="true" class="edit-text text-white text-2xl">护理前</span>
-        </div>
-        <div class="tag-gradient w-[220px] py-3 text-center">
-            <span contenteditable="true" class="edit-text text-white text-2xl">护理后</span>
-        </div>
-    </div>
+      const el = {
+        poster: document.getElementById('poster'),
+        posterWrap: document.getElementById('posterWrap'),
+        fileInput: document.getElementById('fileInput'),
+        cropOverlay: document.getElementById('cropOverlay'),
+        cropStage: document.getElementById('cropStage'),
+        cropImage: document.getElementById('cropImage'),
+        zoomRange: document.getElementById('zoomRange'),
+        exportCanvas: document.getElementById('exportCanvas'),
+        ctx: document.getElementById('exportCanvas').getContext('2d'),
+        leftZone: document.getElementById('leftZone'),
+        rightZone: document.getElementById('rightZone'),
+        cropTitle: document.getElementById('cropTitle'),
+        cropSubtitle: document.getElementById('cropSubtitle'),
+        zoomLabel: document.getElementById('zoomLabel'),
+        opsLabel: document.getElementById('opsLabel'),
+        cropFit: document.getElementById('cropFit'),
+        cropCenter: document.getElementById('cropCenter'),
+        cropReset: document.getElementById('cropReset'),
+        cropCancel: document.getElementById('cropCancel'),
+        cropConfirm: document.getElementById('cropConfirm'),
+        cropHelp: document.getElementById('cropHelp'),
+        brandName: document.getElementById('brandName'),
+        brandTagline: document.getElementById('brandTagline'),
+        brandRight: document.getElementById('brandRight'),
+        titleText: document.getElementById('titleText'),
+        leftLabel: document.getElementById('leftLabel'),
+        rightLabel: document.getElementById('rightLabel'),
+        footerCopy: document.getElementById('footerCopy'),
+        footerSub: document.getElementById('footerSub'),
+        bottomPill: document.getElementById('bottomPill'),
+        resetBtn: document.getElementById('resetBtn'),
+        downloadBtn: document.getElementById('downloadBtn'),
+        appBadge: document.getElementById('appBadge'),
+        sizeBadge: document.getElementById('sizeBadge'),
+        modeBadge: document.getElementById('modeBadge'),
+        hintText: document.getElementById('hintText')
+      };
 
-    <!-- 底部 -->
-    <div class="text-center mb-5">
-        <p class="text-xl font-bold text-primary">问题肌·学术派</p>
-        <p class="text-sm text-secondary mt-1">专研理论 / 专注教育 / 专精产品</p>
-    </div>
-    <div class="h-12 bg-gradient-to-r from-primary to-darkBlue flex items-center justify-center">
-        <span class="text-white text-sm tracking-widest">XIANGXUECEN</span>
-    </div>
-</div>
+      const state = {
+        activeSide: null,
+        images: { left: null, right: null },
+        crop: {
+          scale: 1,
+          x: 0,
+          y: 0,
+          drag: false,
+          startX: 0,
+          startY: 0,
+          startImgX: 0,
+          startImgY: 0
+        }
+      };
 
-<button onclick="downloadPoster()" class="mt-5 bg-primary text-white px-8 py-3 rounded-lg">
-    下载 1080×1660 高清海报
-</button>
+      function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+      }
 
-<!-- 裁切弹窗 -->
-<div id="cropModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl p-5 w-full max-w-2xl">
-        <h3 class="text-lg font-bold text-center mb-4 text-primary">裁切图片（所见即所得）</h3>
-        <div class="w-full h-[500px] bg-gray-100 rounded flex items-center justify-center">
-            <img id="cropImg">
-        </div>
-        <div class="flex justify-center gap-4 mt-4">
-            <button onclick="closeCrop()" class="px-5 py-2 bg-gray-500 text-white rounded">取消</button>
-            <button onclick="confirmCrop()" class="px-5 py-2 bg-primary text-white rounded">确认裁切</button>
-        </div>
-    </div>
-</div>
+      function getText(node, fallback) {
+        const text = (node.innerText || '').replace(/\u00A0/g, ' ').trim();
+        return text || fallback;
+      }
 
-<script>
-let cropper;
-let targetImg;
+      function fitEditable(node, min = 0.7, max = 1) {
+        node.style.transform = 'scale(1)';
+        let scale = max;
+        while (scale >= min) {
+          node.style.transform = `scale(${scale})`;
+          if (node.scrollWidth <= node.clientWidth + 2 && node.scrollHeight <= node.clientHeight + 2) break;
+          scale -= 0.02;
+        }
+      }
 
-// 绑定上传
-document.getElementById('file1').addEventListener('change', (e) => openCrop(e, 'img1'));
-document.getElementById('file2').addEventListener('change', (e) => openCrop(e, 'img2'));
+      function normalizeEditable(node, fallback, min = 0.7) {
+        const text = (node.innerText || '').replace(/\u00A0/g, ' ').trim();
+        node.innerText = text || fallback;
+        fitEditable(node, min, 1);
+      }
 
-// 打开裁切（🔥 锁定比例：和海报图片完全一致）
-function openCrop(e, id) {
-    targetImg = id;
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-    const img = document.getElementById('cropImg');
-    img.src = url;
-
-    document.getElementById('cropModal').classList.remove('hidden');
-
-    setTimeout(() => {
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(img, {
-            viewMode: 1,
-            autoCropArea: 0.9,
-            movable: true,
-            zoomable: true,
-            // 🔥 核心修复：锁定和海报一样的比例（1:1.48 左右图比例）
-            aspectRatio: 540 / 800,
+      function bindEditable(node, fallback, min = 0.7) {
+        node.addEventListener('input', () => fitEditable(node, min, 1));
+        node.addEventListener('blur', () => normalizeEditable(node, fallback, min));
+        node.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            node.blur();
+          }
         });
-    }, 100);
-}
+      }
 
-// 确认裁切（🔥 严格输出裁切框内画面，不变形）
-function confirmCrop() {
-    cropper.getCroppedCanvas({
-        width: 1080,
-        height: 1600,
-        imageSmoothingQuality: 'high'
-    }).toBlob(blob => {
-        document.getElementById(targetImg).src = URL.createObjectURL(blob);
-        closeCrop();
-    });
-}
+      function syncFits() {
+        [
+          [el.brandName, 0.65],
+          [el.brandTagline, 0.65],
+          [el.brandRight, 0.65],
+          [el.titleText, 0.55],
+          [el.leftLabel, 0.72],
+          [el.rightLabel, 0.72],
+          [el.footerCopy, 0.72],
+          [el.footerSub, 0.72],
+          [el.bottomPill, 0.8]
+        ].forEach(([node, min]) => fitEditable(node, min, 1));
+      }
 
-function closeCrop() {
-    document.getElementById('cropModal').classList.add('hidden');
-    if (cropper) cropper.destroy();
-}
+      function syncPosterScale() {
+        const scale = el.posterWrap.clientWidth / BASE.w;
+        el.poster.style.transform = `scale(${scale})`;
+        el.posterWrap.style.height = `${BASE.h * scale}px`;
+        syncFits();
+      }
 
-// 下载
-async function downloadPoster() {
-    const canvas = await html2canvas(document.getElementById('poster'), {
-        width: 1080,
-        height: 1660,
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#fff'
-    });
-    const a = document.createElement('a');
-    a.download = '向雪岑案例海报.png';
-    a.href = canvas.toDataURL('image/png');
-    a.click();
-}
-</script>
+      function drawRoundedPill(ctx, x, y, w, h) {
+        const r = 10;
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+      }
+
+      function fitText(ctx, text, maxWidth, startSize, minSize, weight = 800, family = '"Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif') {
+        let size = startSize;
+        while (size >= minSize) {
+          ctx.font = `${weight} ${size}px ${family}`;
+          if (ctx.measureText(text).width <= maxWidth) return ctx.font;
+          size -= 1;
+        }
+        return `${weight} ${minSize}px ${family}`;
+      }
+
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
+      function applyZoneImage(side, dataUrl) {
+        const zone = side === 'left' ? el.leftZone : el.rightZone;
+        let img = zone.querySelector('img.photo');
+        if (!img) {
+          img = document.createElement('img');
+          img.className = 'photo';
+          img.alt = '';
+          zone.prepend(img);
+        }
+        img.src = dataUrl;
+        zone.classList.add('has-image');
+      }
+
+      function cropBounds() {
+        const w = el.cropImage.naturalWidth * state.crop.scale;
+        const h = el.cropImage.naturalHeight * state.crop.scale;
+        return {
+          minX: BASE.zoneW - w,
+          maxX: 0,
+          minY: BASE.zoneH - h,
+          maxY: 0
+        };
+      }
+
+      function renderCropImage() {
+        if (!el.cropImage.src) return;
+        const s = state.crop.scale;
+        el.cropImage.style.width = `${el.cropImage.naturalWidth * s}px`;
+        el.cropImage.style.height = `${el.cropImage.naturalHeight * s}px`;
+        el.cropImage.style.transform = `translate(${state.crop.x}px, ${state.crop.y}px)`;
+      }
+
+      function clampCrop() {
+        const b = cropBounds();
+        state.crop.x = clamp(state.crop.x, b.minX, b.maxX);
+        state.crop.y = clamp(state.crop.y, b.minY, b.maxY);
+        renderCropImage();
+      }
+
+      function fitCropToFrame() {
+        if (!el.cropImage.src) return;
+        const fit = Math.max(BASE.zoneW / el.cropImage.naturalWidth, BASE.zoneH / el.cropImage.naturalHeight);
+        state.crop.scale = fit;
+        state.crop.x = (BASE.zoneW - el.cropImage.naturalWidth * fit) / 2;
+        state.crop.y = (BASE.zoneH - el.cropImage.naturalHeight * fit) / 2;
+        el.zoomRange.min = String(fit);
+        el.zoomRange.max = String(fit * 4);
+        el.zoomRange.value = String(fit);
+        clampCrop();
+      }
+
+      function centerCropImage() {
+        if (!el.cropImage.src) return;
+        const drawW = el.cropImage.naturalWidth * state.crop.scale;
+        const drawH = el.cropImage.naturalHeight * state.crop.scale;
+        state.crop.x = (BASE.zoneW - drawW) / 2;
+        state.crop.y = (BASE.zoneH - drawH) / 2;
+        clampCrop();
+      }
+
+      function setCropScale(nextScale) {
+        if (!el.cropImage.src) return;
+        const prev = state.crop.scale;
+        const centerX = BASE.zoneW / 2;
+        const centerY = BASE.zoneH / 2;
+        const relX = (centerX - state.crop.x) / prev;
+        const relY = (centerY - state.crop.y) / prev;
+        state.crop.scale = nextScale;
+        state.crop.x = centerX - relX * state.crop.scale;
+        state.crop.y = centerY - relY * state.crop.scale;
+        clampCrop();
+        el.zoomRange.value = String(state.crop.scale);
+      }
+
+      function closeCropper() {
+        el.cropOverlay.classList.remove('open');
+        el.cropOverlay.setAttribute('aria-hidden', 'true');
+        state.crop.drag = false;
+        if (el.cropImage.dataset.objectUrl) {
+          URL.revokeObjectURL(el.cropImage.dataset.objectUrl);
+          delete el.cropImage.dataset.objectUrl;
+        }
+        el.cropImage.src = '';
+      }
+
+      async function openCropper(file, side) {
+        const objectUrl = URL.createObjectURL(file);
+        state.activeSide = side;
+        el.cropTitle.textContent = side === 'left' ? '裁切护理前图片' : '裁切护理后图片';
+        el.cropSubtitle.textContent = '裁切结果将直接用于海报对应区域';
+        el.cropImage.src = objectUrl;
+        el.cropImage.dataset.objectUrl = objectUrl;
+        el.cropOverlay.classList.add('open');
+        el.cropOverlay.setAttribute('aria-hidden', 'false');
+        await new Promise((resolve) => { el.cropImage.onload = resolve; });
+        fitCropToFrame();
+      }
+
+      function drawLabel(ctx, x, y, w, h, text) {
+        const g = ctx.createLinearGradient(x, y, x + w, y);
+        g.addColorStop(0, '#1A3B99');
+        g.addColorStop(1, '#0A1A4A');
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, w, h);
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '800 36px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif';
+        ctx.fillText(text, x + w / 2, y + h / 2 + 1);
+      }
+
+      async function renderPosterToCanvas(scale = 2) {
+        const canvas = el.exportCanvas;
+        const ctx = el.ctx;
+        canvas.width = BASE.w * scale;
+        canvas.height = BASE.h * scale;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.scale(scale, scale);
+
+        const brandName = getText(el.brandName, DEFAULTS.brandName);
+        const brandTagline = getText(el.brandTagline, DEFAULTS.brandTagline);
+        const brandRight = getText(el.brandRight, DEFAULTS.brandRight);
+        const title = getText(el.titleText, DEFAULTS.title);
+        const leftLabel = getText(el.leftLabel, DEFAULTS.leftLabel);
+        const rightLabel = getText(el.rightLabel, DEFAULTS.rightLabel);
+        const footerCopy = getText(el.footerCopy, DEFAULTS.footerCopy);
+        const footerSub = getText(el.footerSub, DEFAULTS.footerSub);
+        const bottomPill = getText(el.bottomPill, DEFAULTS.bottomPill);
+
+        ctx.fillStyle = '#1A3B99';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'alphabetic';
+        ctx.font = '500 29px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif';
+        ctx.fillText(brandName, 48, 100);
+        ctx.fillRect(191, 82, 1, 36);
+        ctx.font = '600 15px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif';
+        ctx.fillText(brandTagline, 208, 96);
+
+        ctx.fillStyle = '#4A6FD1';
+        ctx.textAlign = 'right';
+        ctx.font = '500 15px Arial, sans-serif';
+        const lines = String(brandRight).split(/\n+/).filter(Boolean);
+        ctx.fillText(lines[0] || '', 1032, 93);
+        ctx.fillText(lines[1] || '', 1032, 112);
+
+        ctx.fillStyle = 'rgba(74,111,209,.6)';
+        ctx.fillRect(48, 145, 984, 1);
+
+        ctx.fillStyle = '#1A3B99';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = fitText(ctx, title, 920, 118, 96, 900);
+        ctx.fillText(title, 540, 320);
+
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 500, 1080, 830);
+        ctx.fillStyle = '#E0E0E0';
+        ctx.fillRect(540, 500, 1, 830);
+        ctx.fillRect(0, 500, 1080, 1);
+        ctx.fillRect(0, 1330, 1080, 1);
+
+        if (state.images.left) {
+          const img = await loadImage(state.images.left);
+          ctx.drawImage(img, 0, 500, 540, 830);
+        }
+        if (state.images.right) {
+          const img = await loadImage(state.images.right);
+          ctx.drawImage(img, 540, 500, 540, 830);
+        }
+
+        drawLabel(ctx, 56, 1379, 366, 68, leftLabel);
+        drawLabel(ctx, 658, 1379, 366, 68, rightLabel);
+
+        ctx.fillStyle = '#1A3B99';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        ctx.font = '800 30px "Microsoft YaHei","PingFang SC","Noto Sans SC",sans-serif';
+        ctx.fillText(footerCopy, 540, 1520);
+
+        ctx.fillStyle = '#4A6FD1';
+        ctx.font = fitText(ctx, footerSub, 760, 19, 15, 500);
+        ctx.fillText(footerSub, 540, 1555);
+
+        const grad = ctx.createLinearGradient(0, 1600, 1080, 1600);
+        grad.addColorStop(0, '#2749d6');
+        grad.addColorStop(1, '#09184a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 1600, 1080, 60);
+        ctx.fillStyle = 'rgba(255,255,255,.05)';
+        drawRoundedPill(ctx, 465, 1618, 150, 24);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,.35)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fillStyle = '#fff';
+        ctx.font = '500 13px Arial, sans-serif';
+        ctx.fillText(bottomPill, 540, 1630);
+
+        ctx.restore();
+        return canvas;
+      }
+
+      function resetAll() {
+        el.brandName.innerText = DEFAULTS.brandName;
+        el.brandTagline.innerText = DEFAULTS.brandTagline;
+        el.brandRight.innerText = DEFAULTS.brandRight;
+        el.titleText.innerText = DEFAULTS.title;
+        el.leftLabel.innerText = DEFAULTS.leftLabel;
+        el.rightLabel.innerText = DEFAULTS.rightLabel;
+        el.footerCopy.innerText = DEFAULTS.footerCopy;
+        el.footerSub.innerText = DEFAULTS.footerSub;
+        el.bottomPill.innerText = DEFAULTS.bottomPill;
+        state.images.left = null;
+        state.images.right = null;
+        el.leftZone.classList.remove('has-image');
+        el.rightZone.classList.remove('has-image');
+        el.leftZone.querySelectorAll('img.photo').forEach((node) => node.remove());
+        el.rightZone.querySelectorAll('img.photo').forEach((node) => node.remove());
+        syncFits();
+      }
+
+      function init() {
+        el.appBadge.textContent = DEFAULTS.appBadge;
+        el.sizeBadge.textContent = DEFAULTS.sizeBadge;
+        el.modeBadge.textContent = DEFAULTS.modeBadge;
+        el.resetBtn.textContent = DEFAULTS.reset;
+        el.downloadBtn.textContent = DEFAULTS.download;
+        el.hintText.textContent = DEFAULTS.hint;
+        el.cropTitle.textContent = DEFAULTS.cropTitle;
+        el.cropSubtitle.textContent = DEFAULTS.cropSubtitle;
+        el.zoomLabel.textContent = DEFAULTS.zoom;
+        el.opsLabel.textContent = DEFAULTS.ops;
+        el.cropFit.textContent = DEFAULTS.cropFit;
+        el.cropCenter.textContent = DEFAULTS.cropCenter;
+        el.cropReset.textContent = DEFAULTS.cropReset;
+        el.cropCancel.textContent = DEFAULTS.cropCancel;
+        el.cropConfirm.textContent = DEFAULTS.cropConfirm;
+        el.cropHelp.textContent = DEFAULTS.cropHelp;
+
+        bindEditable(el.brandName, DEFAULTS.brandName, 0.65);
+        bindEditable(el.brandTagline, DEFAULTS.brandTagline, 0.65);
+        bindEditable(el.brandRight, DEFAULTS.brandRight, 0.65);
+        bindEditable(el.titleText, DEFAULTS.title, 0.55);
+        bindEditable(el.leftLabel, DEFAULTS.leftLabel, 0.72);
+        bindEditable(el.rightLabel, DEFAULTS.rightLabel, 0.72);
+        bindEditable(el.footerCopy, DEFAULTS.footerCopy, 0.72);
+        bindEditable(el.footerSub, DEFAULTS.footerSub, 0.72);
+        bindEditable(el.bottomPill, DEFAULTS.bottomPill, 0.8);
+
+        el.leftZone.addEventListener('click', () => {
+          state.activeSide = 'left';
+          el.fileInput.value = '';
+          el.fileInput.click();
+        });
+        el.rightZone.addEventListener('click', () => {
+          state.activeSide = 'right';
+          el.fileInput.value = '';
+          el.fileInput.click();
+        });
+
+        el.fileInput.addEventListener('change', () => {
+          const file = el.fileInput.files && el.fileInput.files[0];
+          if (!file || !state.activeSide) return;
+          openCropper(file, state.activeSide);
+        });
+
+        el.cropStage.addEventListener('pointerdown', (e) => {
+          if (!el.cropImage.src) return;
+          state.crop.drag = true;
+          state.crop.startX = e.clientX;
+          state.crop.startY = e.clientY;
+          state.crop.startImgX = state.crop.x;
+          state.crop.startImgY = state.crop.y;
+          el.cropStage.setPointerCapture(e.pointerId);
+        });
+        el.cropStage.addEventListener('pointermove', (e) => {
+          if (!state.crop.drag) return;
+          state.crop.x = state.crop.startImgX + (e.clientX - state.crop.startX);
+          state.crop.y = state.crop.startImgY + (e.clientY - state.crop.startY);
+          clampCrop();
+        });
+        ['pointerup','pointercancel','pointerleave'].forEach((type) => {
+          el.cropStage.addEventListener(type, () => { state.crop.drag = false; });
+        });
+        el.cropStage.addEventListener('wheel', (e) => {
+          if (!el.cropImage.src) return;
+          e.preventDefault();
+          setCropScale(state.crop.scale * (e.deltaY > 0 ? 0.94 : 1.06));
+        }, { passive:false });
+
+        el.cropFit.addEventListener('click', fitCropToFrame);
+        el.cropCenter.addEventListener('click', centerCropImage);
+        el.cropReset.addEventListener('click', fitCropToFrame);
+        el.cropCancel.addEventListener('click', closeCropper);
+        el.cropOverlay.addEventListener('click', (e) => {
+          if (e.target === el.cropOverlay) closeCropper();
+        });
+        el.zoomRange.addEventListener('input', () => {
+          setCropScale(parseFloat(el.zoomRange.value));
+        });
+        el.cropConfirm.addEventListener('click', async () => {
+          const side = state.activeSide;
+          if (!side || !el.cropImage.src) return;
+          const source = await loadImage(el.cropImage.src);
+          const off = document.createElement('canvas');
+          off.width = BASE.zoneW;
+          off.height = BASE.zoneH;
+          const octx = off.getContext('2d');
+          octx.fillStyle = '#fff';
+          octx.fillRect(0, 0, off.width, off.height);
+
+          const sourceX = (-state.crop.x) / state.crop.scale;
+          const sourceY = (-state.crop.y) / state.crop.scale;
+          const sourceW = BASE.zoneW / state.crop.scale;
+          const sourceH = BASE.zoneH / state.crop.scale;
+          const sx = clamp(sourceX, 0, Math.max(0, source.naturalWidth - sourceW));
+          const sy = clamp(sourceY, 0, Math.max(0, source.naturalHeight - sourceH));
+          octx.drawImage(source, sx, sy, sourceW, sourceH, 0, 0, BASE.zoneW, BASE.zoneH);
+
+          const dataUrl = off.toDataURL('image/png');
+          state.images[side] = dataUrl;
+          applyZoneImage(side, dataUrl);
+          closeCropper();
+        });
+
+        el.resetBtn.addEventListener('click', resetAll);
+        el.downloadBtn.addEventListener('click', async () => {
+          normalizeEditable(el.brandName, DEFAULTS.brandName, 0.65);
+          normalizeEditable(el.brandTagline, DEFAULTS.brandTagline, 0.65);
+          normalizeEditable(el.brandRight, DEFAULTS.brandRight, 0.65);
+          normalizeEditable(el.titleText, DEFAULTS.title, 0.55);
+          normalizeEditable(el.leftLabel, DEFAULTS.leftLabel, 0.72);
+          normalizeEditable(el.rightLabel, DEFAULTS.rightLabel, 0.72);
+          normalizeEditable(el.footerCopy, DEFAULTS.footerCopy, 0.72);
+          normalizeEditable(el.footerSub, DEFAULTS.footerSub, 0.72);
+          normalizeEditable(el.bottomPill, DEFAULTS.bottomPill, 0.8);
+          const canvas = await renderPosterToCanvas(2);
+          const a = document.createElement('a');
+          a.download = 'xiangxuecen-poster-1080x1660.png';
+          a.href = canvas.toDataURL('image/png');
+          a.click();
+        });
+
+        window.addEventListener('resize', syncPosterScale);
+        syncPosterScale();
+        resetAll();
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+    })();
+  </script>
 </body>
 </html>
