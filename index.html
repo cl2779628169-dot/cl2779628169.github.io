@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>向雪岑 左右对比海报（裁切一致版）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1A3B99',
+                        secondary: '#4A6FD1',
+                        darkBlue: '#0A1A4A',
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .poster-wrap {
+                width: 1080px;
+                height: 1660px;
+                background: #fff;
+                overflow: hidden;
+            }
+            .tag-gradient {
+                background: linear-gradient(90deg, #1A3B99 0%, #0A1A4A 100%);
+            }
+            .edit-text {
+                @apply outline-none cursor-text hover:bg-primary/10 px-1 rounded;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center py-5">
+
+<div class="text-center mb-3">
+    <h2 class="text-xl font-bold text-gray-800">向雪岑案例海报生成器</h2>
+    <p class="text-sm text-gray-500">✅ 裁切所见即所得 ✅ 文字可编辑 ✅ 固定1080×1660</p>
+</div>
+
+<!-- 海报 -->
+<div id="poster" class="poster-wrap flex flex-col">
+    <!-- 顶部 -->
+    <div class="px-10 pt-8">
+        <div class="flex justify-between items-start">
+            <div>
+                <p class="text-3xl font-bold text-primary">向雪岑<sup>®</sup></p>
+                <div class="border-l-2 border-primary pl-3 mt-1">
+                    <p class="text-sm text-primary">还原肌肤</p>
+                    <p class="text-sm text-primary">健康美</p>
+                </div>
+            </div>
+            <div class="text-right pt-1">
+                <p class="text-xs text-secondary tracking-widest">REVIVE HEALTH</p>
+                <p class="text-xs text-secondary tracking-widest">AND BEAUTY OF THE SKIN</p>
+            </div>
+        </div>
+        <div class="w-full h-px bg-secondary/40 mt-5"></div>
+    </div>
+
+    <!-- 标题 -->
+    <div class="text-center mt-10">
+        <h1 contenteditable="true" class="edit-text text-6xl font-bold text-primary">双C操作案例</h1>
+    </div>
+
+    <!-- 左右对比图 -->
+    <div class="flex-1 flex mt-10">
+        <div class="w-1/2 border-r border-gray-200 relative">
+            <input type="file" id="file1" class="hidden" accept="image/*">
+            <img id="img1" src="https://picsum.photos/540/800?1"
+                 class="w-full h-full object-cover cursor-pointer"
+                 onclick="document.getElementById('file1').click()">
+        </div>
+        <div class="w-1/2 relative">
+            <input type="file" id="file2" class="hidden" accept="image/*">
+            <img id="img2" src="https://picsum.photos/540/800?2"
+                 class="w-full h-full object-cover cursor-pointer"
+                 onclick="document.getElementById('file2').click()">
+        </div>
+    </div>
+
+    <!-- 标签 -->
+    <div class="flex justify-around px-10 py-6">
+        <div class="tag-gradient w-[220px] py-3 text-center">
+            <span contenteditable="true" class="edit-text text-white text-2xl">护理前</span>
+        </div>
+        <div class="tag-gradient w-[220px] py-3 text-center">
+            <span contenteditable="true" class="edit-text text-white text-2xl">护理后</span>
+        </div>
+    </div>
+
+    <!-- 底部 -->
+    <div class="text-center mb-5">
+        <p class="text-xl font-bold text-primary">问题肌·学术派</p>
+        <p class="text-sm text-secondary mt-1">专研理论 / 专注教育 / 专精产品</p>
+    </div>
+    <div class="h-12 bg-gradient-to-r from-primary to-darkBlue flex items-center justify-center">
+        <span class="text-white text-sm tracking-widest">XIANGXUECEN</span>
+    </div>
+</div>
+
+<button onclick="downloadPoster()" class="mt-5 bg-primary text-white px-8 py-3 rounded-lg">
+    下载 1080×1660 高清海报
+</button>
+
+<!-- 裁切弹窗 -->
+<div id="cropModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-5 w-full max-w-2xl">
+        <h3 class="text-lg font-bold text-center mb-4 text-primary">裁切图片（所见即所得）</h3>
+        <div class="w-full h-[500px] bg-gray-100 rounded flex items-center justify-center">
+            <img id="cropImg">
+        </div>
+        <div class="flex justify-center gap-4 mt-4">
+            <button onclick="closeCrop()" class="px-5 py-2 bg-gray-500 text-white rounded">取消</button>
+            <button onclick="confirmCrop()" class="px-5 py-2 bg-primary text-white rounded">确认裁切</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let cropper;
+let targetImg;
+
+// 绑定上传
+document.getElementById('file1').addEventListener('change', (e) => openCrop(e, 'img1'));
+document.getElementById('file2').addEventListener('change', (e) => openCrop(e, 'img2'));
+
+// 打开裁切（🔥 锁定比例：和海报图片完全一致）
+function openCrop(e, id) {
+    targetImg = id;
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    const img = document.getElementById('cropImg');
+    img.src = url;
+
+    document.getElementById('cropModal').classList.remove('hidden');
+
+    setTimeout(() => {
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(img, {
+            viewMode: 1,
+            autoCropArea: 0.9,
+            movable: true,
+            zoomable: true,
+            // 🔥 核心修复：锁定和海报一样的比例（1:1.48 左右图比例）
+            aspectRatio: 540 / 800,
+        });
+    }, 100);
+}
+
+// 确认裁切（🔥 严格输出裁切框内画面，不变形）
+function confirmCrop() {
+    cropper.getCroppedCanvas({
+        width: 1080,
+        height: 1600,
+        imageSmoothingQuality: 'high'
+    }).toBlob(blob => {
+        document.getElementById(targetImg).src = URL.createObjectURL(blob);
+        closeCrop();
+    });
+}
+
+function closeCrop() {
+    document.getElementById('cropModal').classList.add('hidden');
+    if (cropper) cropper.destroy();
+}
+
+// 下载
+async function downloadPoster() {
+    const canvas = await html2canvas(document.getElementById('poster'), {
+        width: 1080,
+        height: 1660,
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#fff'
+    });
+    const a = document.createElement('a');
+    a.download = '向雪岑案例海报.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+}
+</script>
+</body>
+</html>
